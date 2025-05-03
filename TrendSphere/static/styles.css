@@ -1,0 +1,383 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #0a0a1a;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    background: linear-gradient(45deg, #ff3a88, #33ccff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-size: 2.5rem;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar {
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 1rem;
+}
+
+.platform-filters {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.platform-btn {
+    background-color: #1a1a38;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.platform-btn:hover {
+    background-color: #2a2a48;
+    transform: translateY(-2px);
+}
+
+.platform-btn.active {
+    background: linear-gradient(45deg, #ff3a88, #33ccff);
+    box-shadow: 0 4px 15px rgba(255, 58, 136, 0.3);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.trends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.trend-card {
+    background-color: #1a1a38;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.trend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.trend-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 1rem 0 0.5rem;
+    color: #fff;
+    line-height: 1.4;
+}
+
+.trend-meta {
+    font-size: 0.9rem;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.platform-tag {
+    font-size: 1.1rem;
+    margin-right: 8px;
+    color: #33ccff;
+}
+
+.trend-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trend-stat i {
+    color: #ff3a88;
+}
+
+.trend-rank {
+    background: linear-gradient(45deg, #ff3a88, #33ccff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.trend-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.trend-btn {
+    background-color: #2a2a48;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.trend-btn:hover {
+    background-color: #3a3a58;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.trend-btn i {
+    font-size: 1rem;
+}
+
+/* Loading spinner styles */
+#loadingSpinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .platform-filters {
+        gap: 0.5rem;
+    }
+
+    .platform-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .trend-card {
+        padding: 1rem;
+    }
+}
+
+/* Animation for trend cards */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.trend-card {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Platform-specific colors */
+.twitter { background-color: #1da1f2; color: white; }
+.youtube { background-color: #ff0000; color: white; }
+.reddit { background-color: #ff4500; color: white; }
+.hackernews { background-color: #ff6600; color: white; }
+.googlenews { background-color: #4285f4; color: white; }
+.producthunt { background-color: #da552f; color: white; }
+
+@media (max-width: 768px) {
+    .platform-filters {
+        flex-wrap: nowrap;
+    }
+    
+    .trends-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* YouTube thumbnail styles */
+.youtube-thumbnail {
+    position: relative;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    display: block;
+    text-decoration: none;
+}
+
+.youtube-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.youtube-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.play-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 58, 136, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.youtube-thumbnail:hover .play-button {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.play-button i {
+    color: white;
+    font-size: 24px;
+    margin-left: 4px;
+}
+
+.trend-description {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin: 0.5rem 0;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+/* Channel info styles */
+.channel-info {
+    font-size: 0.9rem;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.channel-info i {
+    color: #ff3a88;
+    font-size: 0.8rem;
+}
+
+.header-section {
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 10px;
+    margin: 2rem auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 95%;
+}
+
+.header-section h1 {
+    color: #ffffff;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-size: 3rem;
+}
+
+.header-section .lead {
+    color: #a0a0a0;
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.2rem;
+    line-height: 1.6;
+}
+
+/* Override any conflicting styles */
+body h1 {
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: inherit;
+    text-shadow: none;
+}
+.platform-switcher-btn {
+  position: fixed;
+  top: 70px; /* Increased to position below navbar */
+  left: 10px;
+  z-index: 1002; /* Increased to be above navbar */
+  background: linear-gradient(45deg, #ff3a88, #33ccff);
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 16px;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  display: block !important; /* Force display */
+}
+
+.mobile-platform-nav {
+  display: none;
+  position: fixed;
+  top: 120px; /* Adjusted to appear below the button */
+  left: 10px;
+  background: #222;
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 1002;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  min-width: 150px;
+}
+.mobile-platform-nav.show {
+  display: block;
+}
+.mobile-platform-nav a {
+  display: block;
+  color: #fff;
+  padding: 8px 0;
+  text-decoration: none;
+}

@@ -1,0 +1,125 @@
+.trend-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.trend-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.trend-rank {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ff6b6b;
+}
+
+.trend-platform {
+    font-size: 0.9em;
+    color: #888;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.trend-title {
+    font-size: 1.2em;
+    margin: 15px 0;
+    line-height: 1.4;
+}
+
+.trend-stats {
+    display: flex;
+    justify-content: space-between;
+    color: #888;
+    font-size: 0.9em;
+}
+
+.trend-engagement, .trend-growth {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.youtube-thumbnail {
+    margin: 15px 0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.youtube-thumbnail img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.youtube-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.platform-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.platform-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.platform-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.platform-btn.active {
+    background: #ff6b6b;
+    box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
+
+.error-message {
+    text-align: center;
+    color: #ff6b6b;
+    padding: 20px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+@media (max-width: 768px) {
+    .trend-card {
+        padding: 15px;
+    }
+    
+    .trend-title {
+        font-size: 1.1em;
+    }
+    
+    .platform-selector {
+        flex-wrap: wrap;
+    }
+    
+    .platform-btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+} 
