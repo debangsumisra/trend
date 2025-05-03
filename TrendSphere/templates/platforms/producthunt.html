@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Product Hunt Trends - TrendSphere{% endblock %}
+
+{% block content %}
+<section class="platform-header">
+    <h1>Product Hunt Trends</h1>
+    <p>Discover what's trending on Product Hunt right now. Stay updated with the latest products and innovations.</p>
+</section>
+
+<div class="category-selector">
+    <button class="category-btn active" data-category="all">All Products</button>
+    <button class="category-btn" data-category="tech">Tech</button>
+    <button class="category-btn" data-category="apps">Apps</button>
+    <button class="category-btn" data-category="games">Games</button>
+    <button class="category-btn" data-category="books">Books</button>
+</div>
+
+<div class="trend-container" id="trendContainer">
+    <div class="loading">Loading trends...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = io();
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    function displayTrends(trends) {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '';
+
+        if (!trends || trends.length === 0) {
+            container.innerHTML = '<div class="error">No trends found</div>';
+            return;
+        }
+
+        trends.forEach(trend => {
+            const card = document.createElement('div');
+            card.className = 'trend-card';
+            
+            card.innerHTML = `
+                <div class="trend-header">
+                    <span class="trend-rank">#${trend.rank}</span>
+                    <span class="platform-tag">
+                        <i class="fas fa-rocket"></i>
+                    </span>
+                </div>
+                <h3 class="trend-title">${trend.title}</h3>
+                <div class="trend-meta">
+                    <span class="trend-stat">
+                        <i class="fas fa-heart"></i>
+                        ${formatNumber(trend.votes || 0)} votes
+                    </span>
+                    <span class="trend-stat">
+                        <i class="fas fa-user"></i>
+                        ${trend.maker || 'Anonymous'}
+                    </span>
+                </div>
+                <div class="trend-actions">
+                    <a href="${trend.url}" 
+                       target="_blank" 
+                       class="trend-btn">
+                        <i class="fas fa-external-link-alt"></i> View Product
+                    </a>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function fetchTrends() {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '<div class="loading">Loading trends...</div>';
+
+        fetch('/api/producthunt/trends')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    container.innerHTML = `<div class="error">${data.message || 'Error loading trends'}</div>`;
+                } else {
+                    displayTrends(data.data);
+                }
+            })
+            .catch(error => {
+                container.innerHTML = `<div class="error">Error loading trends: ${error.message}</div>`;
+            });
+    }
+
+    // Remove category button logic
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.style.display = 'none';
+    });
+
+    // Socket.io event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        fetchTrends();
+    });
+
+    socket.on('trends_update', (data) => {
+        if (data.platform === 'producthunt') {
+            displayTrends(data.trends);
+        }
+    });
+
+    // Initial fetch
+    fetchTrends();
+</script>
+{% endblock %} 
