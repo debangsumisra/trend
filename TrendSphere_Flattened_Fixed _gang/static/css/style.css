@@ -1,0 +1,38 @@
+.trend-meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.trend-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.trend-stat i {
+    color: #1da1f2;
+}
+
+.platform-btn.instagram {
+    background: rgba(225, 48, 108, 0.1);
+}
+
+.platform-btn.instagram.active {
+    background: linear-gradient(45deg, #e1306c, #833ab4);
+    box-shadow: 0 4px 20px rgba(225, 48, 108, 0.4);
+}
+
+.trend-stat i.fa-heart {
+    color: #e1306c;
+}
+
+.trend-stat i.fa-comment {
+    color: #833ab4;
+}
+
+.trend-stat i.fa-user {
+    color: #405de6;
+} 
