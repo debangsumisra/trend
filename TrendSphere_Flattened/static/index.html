@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrendSphere - Real-time Social Media Trends</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Arial', sans-serif;
+        }
+        
+        body {
+            color: white;
+            overflow-x: hidden;
+            background-color: #080a1a;
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        /* Header/Nav */
+        header {
+            padding: 1.5rem 0;
+            position: relative;
+            z-index: 10;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            margin-right: 0.5rem;
+            color: #6d8aff;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .logo-text span:first-child {
+            color: #FF3385;
+        }
+        
+        .logo-text span:last-child {
+            color: #6d8aff;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #FF3385;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 51, 133, 0.1) 0%, rgba(109, 138, 255, 0.1) 100%);
+            z-index: -1;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 51, 133, 0.2) 0%, rgba(109, 138, 255, 0.2) 100%);
+            filter: blur(100px);
+            z-index: -1;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(13, 13, 38, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            border-radius: 2px;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            color: #ccc;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .hero-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .hero-btn-primary {
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            color: white;
+            border: none;
+        }
+
+        .hero-btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(109, 138, 255, 0.3);
+        }
+
+        .hero-btn i {
+            font-size: 1.2rem;
+        }
+
+        /* Platform Selector */
+        .platform-selector {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            position: relative;
+            min-height: 120px;
+            padding: 1rem;
+            background: rgba(13, 13, 38, 0.6);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .platform-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.8rem;
+            position: relative;
+            min-width: 140px;
+        }
+        
+        .platform-btn {
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 140px;
+            justify-content: center;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .platform-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .platform-btn.active {
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            box-shadow: 0 6px 20px rgba(109, 138, 255, 0.3);
+        }
+        
+        .platform-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Trend Container */
+        .trend-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+        
+        .trend-card {
+            background: rgba(26, 26, 56, 0.6);
+            border-radius: 15px;
+            padding: 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .trend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .trend-inner {
+            padding: 1.5rem;
+        }
+        
+        .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+        
+        .trend-rank {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(109, 138, 255, 0.3);
+        }
+        
+        .trend-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #fff;
+        }
+        
+        .trend-meta {
+            display: flex;
+            gap: 1rem;
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .trend-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .trend-stat:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        
+        .trend-description {
+            color: #aaa;
+            margin: 1rem 0;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .trend-actions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .trend-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #FF3385, #6d8aff);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+        
+        .trend-btn:hover {
+            background: linear-gradient(45deg, #ff1a6f, #5a43ff);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(109, 138, 255, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero {
+                padding: 3rem 0;
+            }
+            
+            .hero-content {
+                padding: 1.5rem;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.1rem;
+            }
+            
+            .hero-stats {
+                gap: 2rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .hero-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .platform-selector {
+                gap: 1rem;
+            }
+            
+            .platform-btn {
+                min-width: 120px;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <nav>
+                <a href="/" class="logo">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <div class="logo-text">
+                        <span>Trend</span><span>Sphere</span>
+                    </div>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="/twitter" class="nav-link">Twitter</a>
+                    <a href="/youtube" class="nav-link">YouTube</a>
+                    <a href="/reddit" class="nav-link">Reddit</a>
+                    <a href="/hackernews" class="nav-link">Hacker News</a>
+                    <a href="/googlenews" class="nav-link">Google News</a>
+                    <a href="/producthunt" class="nav-link">Product Hunt</a>
+                </div>
+            </nav>
+        </header>
+
+        <div class="hero">
+            <div class="hero-content">
+                <h1>🔥 TrendSphere</h1>
+                <p>Your one-stop destination for trending content across multiple platforms. Stay updated with the latest from Twitter, YouTube, Reddit, Hacker News, Google News, and Product Hunt - all in one place!</p>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">6</div>
+                        <div class="stat-label">Platforms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Updates</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Trends</div>
+                    </div>
+                </div>
+
+                <div class="hero-buttons">
+                    <button class="hero-btn hero-btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Get Started
+                    </button>
+                    <button class="hero-btn hero-btn-secondary">
+                        <i class="fas fa-book"></i>
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="trendContainer" class="trend-container">
+            <!-- Trend cards will be injected here -->
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            // Configuration for the 3D particle effect
+            const config = {
+                particleCount: 150,
+                connectionDistance: 120,
+                maxSpeed: 0.35,
+                colors: ['#FF3385', '#6d8aff', '#5a43ff', '#43c9ff', '#43ffd9'],
+                particleSizeRange: [0.5, 3],
+                pulseSpeed: 0.02,
+                connectionOpacity: 0.15,
+                mouseMoveStrength: 0.03,
+                mouseCircleRadius: 180,
+                mouseCircleOpacity: 0.05
+            };
+            
+            let mouseX = 0;
+            let mouseY = 0;
+            let particles = [];
+            let animationFrame;
+            
+            // Track mouse position
+            window.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            // Touch movement for mobile
+            window.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 0) {
+                    mouseX = e.touches[0].clientX;
+                    mouseY = e.touches[0].clientY;
+                }
+            });
+            
+            // Resize canvas when window size changes
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createParticles();
+            });
+            
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.z = Math.random() * 10; // For 3D depth effect
+                    this.size = (Math.random() * (config.particleSizeRange[1] - config.particleSizeRange[0]) + config.particleSizeRange[0]) * (10 / (this.z + 5));
+                    this.color = config.colors[Math.floor(Math.random() * config.colors.length)];
+                    this.vx = (Math.random() - 0.5) * config.maxSpeed;
+                    this.vy = (Math.random() - 0.5) * config.maxSpeed;
+                    this.vz = (Math.random() - 0.5) * 0.1; // Slower movement in z-axis
+                    this.pulse = Math.random() * Math.PI * 2;
+                }
+                
+                update() {
+                    // Move particle
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.z += this.vz;
+                    
+                    // Handle z-axis boundaries
+                    if (this.z < 0 || this.z > 10) {
+                        this.vz = -this.vz;
+                    }
+                    
+                    // Wrap around screen edges
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                    if (this.y > canvas.height) this.y = 0;
+                    
+                    // Gentle pulse animation
+                    this.pulse += config.pulseSpeed;
+                    
+                    // Calculate size based on z position for 3D effect
+                    this.displaySize = this.size * (Math.sin(this.pulse) * 0.2 + 0.8) * (10 / (this.z + 5));
+                    
+                    // Mouse interaction
+                    const dx = mouseX - this.x;
+                    const dy = mouseY - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < config.mouseCircleRadius) {
+                        this.x += dx * config.mouseMoveStrength;
+                        this.y += dy * config.mouseMoveStrength;
+                    }
+                }
+                
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.displaySize, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+            
+            function createParticles() {
+                particles = [];
+                for (let i = 0; i < config.particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+            
+            function drawConnections() {
+                ctx.lineWidth = 0.3;
+                
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const p1 = particles[i];
+                        const p2 = particles[j];
+                        
+                        const dx = p1.x - p2.x;
+                        const dy = p1.y - p2.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < config.connectionDistance) {
+                            // Calculate opacity based on distance and z-difference
+                            const opacity = (1 - distance / config.connectionDistance) * config.connectionOpacity * 
+                                            (1 - Math.abs(p1.z - p2.z) / 10);
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            
+                            // Create gradient for connection line
+                            const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                            gradient.addColorStop(0, p1.color.replace(')', `, ${opacity})`).replace('rgb', 'rgba'));
+                            gradient.addColorStop(1, p2.color.replace(')', `, ${opacity})`).replace('rgb', 'rgba'));
+                            
+                            ctx.strokeStyle = gradient;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            function drawMouseCircle() {
+                if (mouseX > 0 && mouseY > 0) {
+                    ctx.beginPath();
+                    ctx.arc(mouseX, mouseY, config.mouseCircleRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(109, 138, 255, ${config.mouseCircleOpacity})`;
+                    ctx.fill();
+                }
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                drawMouseCircle();
+                
+                // Sort particles by z-index to simulate depth
+                particles.sort((a, b) => b.z - a.z);
+                
+                // Draw connections between particles
+                drawConnections();
+                
+                // Update and draw particles
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+                
+                animationFrame = requestAnimationFrame(animate);
+            }
+            
+            // Add some dynamic particles that spawn at mouse position occasionally
+            function addDynamicParticles() {
+                if (mouseX > 0 && mouseY > 0 && Math.random() > 0.95) {
+                    const p = new Particle();
+                    p.x = mouseX;
+                    p.y = mouseY;
+                    particles.push(p);
+                    
+                    // Remove oldest particle if we exceed max count
+                    if (particles.length > config.particleCount) {
+                        particles.shift();
+                    }
+                }
+                
+                setTimeout(addDynamicParticles, 100);
+            }
+            
+            function init() {
+                createParticles();
+                animate();
+                addDynamicParticles();
+            }
+            
+            init();
+            
+            // Clean up animation on page visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    cancelAnimationFrame(animationFrame);
+                } else {
+                    animate();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
