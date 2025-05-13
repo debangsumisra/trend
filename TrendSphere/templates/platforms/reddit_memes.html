@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Reddit Memes - TrendSphere{% endblock %}
+
+{% block content %}
+<div class="platform-container">
+    <div class="platform-header">
+        <h1>
+            <i class="fab fa-reddit"></i>
+            Trending Memes from r/memes
+        </h1>
+        <p class="platform-description">Discover the hottest memes trending on Reddit</p>
+    </div>
+
+    <div id="memeContainer" class="meme-grid">
+        <div class="loading">Loading memes...</div>
+    </div>
+</div>
+
+<style>
+.meme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.meme-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.meme-card:hover {
+    transform: translateY(-5px);
+}
+
+.meme-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.meme-content {
+    padding: 15px;
+}
+
+.meme-title {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.meme-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.meme-stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.meme-actions {
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.meme-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    background: var(--reddit-color);
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.meme-btn:hover {
+    background: var(--reddit-color-dark);
+    color: white;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetchMemes();
+});
+
+function fetchMemes() {
+    const container = document.getElementById('memeContainer');
+    container.innerHTML = '<div class="loading">Loading memes...</div>';
+
+    fetch('/reddit/memes')
+        .then(response => response.json())
+        .then(memes => {
+            container.innerHTML = '';
+            displayMemes(memes);
+        })
+        .catch(error => {
+            console.error('Error fetching memes:', error);
+            container.innerHTML = '<div class="error">Failed to load memes. Please try again later.</div>';
+        });
+}
+
+function displayMemes(memes) {
+    const container = document.getElementById('memeContainer');
+    const fragment = document.createDocumentFragment();
+
+    memes.forEach(meme => {
+        const card = document.createElement('div');
+        card.className = 'meme-card';
+        
+        card.innerHTML = `
+            <img src="${meme.image_url || 'https://via.placeholder.com/300x300?text=No+Image'}" 
+                 alt="${meme.title}" 
+                 class="meme-image">
+            <div class="meme-content">
+                <h3 class="meme-title">${meme.title}</h3>
+                <div class="meme-meta">
+                    <span class="meme-stat">
+                        <i class="fas fa-arrow-up"></i>
+                        ${formatNumber(meme.score || 0)} upvotes
+                    </span>
+                    <span class="meme-stat">
+                        <i class="fas fa-comments"></i>
+                        ${formatNumber(meme.comments || 0)} comments
+                    </span>
+                </div>
+            </div>
+            <div class="meme-actions">
+                <a href="${meme.url}" 
+                   target="_blank" 
+                   class="meme-btn">
+                    <i class="fab fa-reddit"></i> View on Reddit
+                </a>
+            </div>
+        `;
+
+        fragment.appendChild(card);
+    });
+
+    container.appendChild(fragment);
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+}
+</script>
+{% endblock %} 

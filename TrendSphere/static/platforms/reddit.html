@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Trends - TrendSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/styles/particles.css" rel="stylesheet">
+    <style>
+        :root {
+            --reddit-color: #FF4500;
+            --reddit-color-dark: #e03e00;
+            --card-bg: rgba(26, 26, 46, 0.8);
+            --text-color: #fff;
+            --text-secondary: #aaa;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: #080a1a;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .platform-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .platform-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .platform-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--reddit-color);
+        }
+
+        .platform-description {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .platform-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .platform-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .platform-btn:hover {
+            background: var(--reddit-color);
+            transform: translateY(-2px);
+        }
+
+        .platform-btn.active {
+            background: var(--reddit-color);
+        }
+
+        .trend-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .trend-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        .trend-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .trend-image {
+            width: 100%;
+            height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            cursor: zoom-in;
+        }
+
+        .trend-card.has-image {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trend-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .trend-rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--reddit-color);
+        }
+
+        .platform-tag {
+            color: var(--reddit-color);
+        }
+
+        .trend-title {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            color: var(--text-secondary);
+        }
+
+        .subreddit-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .trend-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: auto;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+        }
+
+        .trend-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .trend-actions {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .trend-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: var(--reddit-color);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .trend-btn:hover {
+            background: var(--reddit-color-dark);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Full screen image viewer */
+        .image-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            cursor: zoom-out;
+        }
+
+        .image-viewer.active {
+            display: flex;
+        }
+
+        .image-viewer img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .image-viewer .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .image-viewer .close-btn:hover {
+            color: var(--reddit-color);
+        }
+
+        @media (max-width: 768px) {
+            .platform-container {
+                padding: 1rem;
+            }
+
+            .platform-header h1 {
+                font-size: 2rem;
+            }
+
+            .platform-selector {
+                gap: 0.5rem;
+            }
+
+            .platform-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .trend-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <nav>
+                <a href="/" class="logo">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <div class="logo-text">
+                        <span>Trend</span><span>Sphere</span>
+                    </div>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="/twitter" class="nav-link"><i class="fab fa-twitter"></i> Twitter</a>
+                    <a href="/youtube" class="nav-link"><i class="fab fa-youtube"></i> YouTube</a>
+                    <a href="/reddit" class="nav-link active"><i class="fab fa-reddit"></i> Reddit</a>
+                    <a href="/hackernews" class="nav-link"><i class="fab fa-hacker-news"></i> Hacker News</a>
+                    <a href="/googlenews" class="nav-link"><i class="fas fa-newspaper"></i> Google News</a>
+                    <a href="/producthunt" class="nav-link"><i class="fas fa-rocket"></i> Product Hunt</a>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <div class="platform-container">
+                <div class="platform-header">
+                    <h1>
+                        <i class="fab fa-reddit"></i>
+                        Reddit Trends
+                    </h1>
+                    <p class="platform-description">Discover what's trending across Reddit</p>
+                </div>
+
+                <div class="platform-selector">
+                    <div class="platform-group">
+                        <button class="platform-btn active" data-subreddit="all">
+                            <i class="fas fa-globe"></i>
+                            All
+                        </button>
+                    </div>
+                    <div class="platform-group">
+                        <button class="platform-btn" data-subreddit="memes">
+                            <i class="fas fa-laugh"></i>
+                            Memes
+                        </button>
+                    </div>
+                    <div class="platform-group">
+                        <button class="platform-btn" data-subreddit="technology">
+                            <i class="fas fa-microchip"></i>
+                            Technology
+                        </button>
+                    </div>
+                    <div class="platform-group">
+                        <button class="platform-btn" data-subreddit="science">
+                            <i class="fas fa-flask"></i>
+                            Science
+                        </button>
+                    </div>
+                    <div class="platform-group">
+                        <button class="platform-btn" data-subreddit="worldnews">
+                            <i class="fas fa-newspaper"></i>
+                            World News
+                        </button>
+                    </div>
+                </div>
+
+                <div id="trendContainer" class="trend-container">
+                    <div class="loading">Loading trends...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="/static/js/particles.js"></script>
+    <script>
+        const socket = io();
+        let isLoading = false;
+        let lastFetchTime = 0;
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days}d ago`;
+            if (hours > 0) return `${hours}h ago`;
+            if (minutes > 0) return `${minutes}m ago`;
+            return 'Just now';
+        }
+
+        function showLoading() {
+            const container = document.getElementById('trendContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading Reddit trends...</p>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            const container = document.getElementById('trendContainer');
+            container.innerHTML = `
+                <div class="error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>${message}</p>
+                    <button class="retry-btn" onclick="fetchTrends()">
+                        <i class="fas fa-sync-alt"></i> Retry
+                    </button>
+                </div>
+            `;
+        }
+
+        function displayTrends(trends) {
+            const container = document.getElementById('trendContainer');
+            container.innerHTML = '';
+
+            if (!trends || trends.length === 0) {
+                showError('No trends found');
+                return;
+            }
+
+            // Create a document fragment for better performance
+            const fragment = document.createDocumentFragment();
+
+            trends.forEach(trend => {
+                const card = document.createElement('div');
+                card.className = `trend-card ${trend.image_url ? 'has-image' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="trend-inner">
+                        ${trend.image_url ? `
+                            <img src="${trend.image_url}" 
+                                 alt="${trend.title}" 
+                                 class="trend-image"
+                                 onclick="showFullImage('${trend.image_url}')">
+                        ` : ''}
+                        <h3 class="trend-title">${trend.title}</h3>
+                        <div class="trend-meta">
+                            <span class="trend-stat">
+                                <i class="fas fa-arrow-up"></i>
+                                <span class="score">${formatNumber(trend.score || 0)}</span>
+                            </span>
+                            <span class="trend-stat">
+                                <i class="fas fa-comments"></i>
+                                <span class="comments">${formatNumber(trend.comments || 0)}</span>
+                            </span>
+                            <span class="trend-stat">
+                                <i class="fas fa-clock"></i>
+                                ${formatDate(trend.created_at)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                fragment.appendChild(card);
+            });
+
+            container.appendChild(fragment);
+        }
+
+        async function fetchTrends(subreddit = 'all') {
+            // Prevent multiple simultaneous requests
+            if (isLoading) return;
+            
+            // Check if we can use cached data
+            const now = Date.now();
+            if (now - lastFetchTime < CACHE_DURATION && !subreddit) {
+                return;
+            }
+
+            isLoading = true;
+            showLoading();
+
+            try {
+                let url = '/api/reddit/trends';
+                if (subreddit) {
+                    url += `?subreddit=${subreddit}`;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const trends = await response.json();
+                displayTrends(trends);
+                lastFetchTime = now;
+            } catch (error) {
+                console.error('Error fetching trends:', error);
+                showError(`Error loading trends: ${error.message}`);
+            } finally {
+                isLoading = false;
+            }
+        }
+
+        // Socket.io event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            const platformBtns = document.querySelectorAll('.platform-btn');
+            let currentSubreddit = 'all';
+
+            // Handle platform selection
+            platformBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    platformBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSubreddit = btn.dataset.subreddit;
+                    fetchTrends(currentSubreddit);
+                });
+            });
+
+            // Initial fetch
+            fetchTrends(currentSubreddit);
+        });
+
+        socket.on('trends_update', (data) => {
+            if (data.platform === 'reddit') {
+                displayTrends(data.trends);
+                lastFetchTime = Date.now();
+            }
+        });
+
+        // Subreddit selector event listener with debounce
+        let debounceTimer;
+        document.getElementById('subredditSelect').addEventListener('change', (e) => {
+            const subreddit = e.target.value;
+            
+            // Clear any pending debounce
+            clearTimeout(debounceTimer);
+            
+            // Set a new debounce timer
+            debounceTimer = setTimeout(() => {
+                // Clear cache for the selected subreddit
+                fetch(`/api/reddit/clear-cache?subreddit=${subreddit}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Cache cleared:', data);
+                        // Fetch new trends for the selected subreddit
+                        fetchTrends(subreddit);
+                    })
+                    .catch(error => {
+                        console.error('Error clearing cache:', error);
+                        // Still fetch new trends even if cache clearing fails
+                        fetchTrends(subreddit);
+                    });
+            }, 300); // 300ms debounce
+        });
+
+        // Add periodic refresh
+        setInterval(() => {
+            if (!isLoading) {
+                const platformBtns = document.querySelectorAll('.platform-btn');
+                let currentSubreddit = 'all';
+
+                // Handle platform selection
+                platformBtns.forEach(btn => {
+                    if (btn.classList.contains('active')) {
+                        currentSubreddit = btn.dataset.subreddit;
+                    }
+                });
+
+                fetchTrends(currentSubreddit);
+            }
+        }, 5 * 60 * 1000); // Refresh every 5 minutes
+
+        // Add image viewer functionality
+        function showFullImage(imageUrl) {
+            const viewer = document.createElement('div');
+            viewer.className = 'image-viewer active';
+            viewer.innerHTML = `
+                <button class="close-btn" onclick="closeImageViewer()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img src="${imageUrl}" alt="Full size image">
+            `;
+            viewer.onclick = closeImageViewer;
+            document.body.appendChild(viewer);
+        }
+
+        function closeImageViewer() {
+            const viewer = document.querySelector('.image-viewer');
+            if (viewer) {
+                viewer.remove();
+            }
+        }
+    </script>
+</body>
+</html> 

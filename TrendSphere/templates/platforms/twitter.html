@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+
+{% block title %}Twitter Trends - TrendSphere{% endblock %}
+
+{% block content %}
+<section class="platform-header">
+    <h1>
+        <i class="fab fa-twitter"></i>
+        Twitter Trends
+    </h1>
+    <p class="platform-description">Top 20 trending topics on Twitter</p>
+</section>
+
+<div class="category-selector" id="categorySelector">
+    <!-- Categories will be loaded dynamically -->
+</div>
+
+<div id="trendContainer" class="trend-container">
+    <div class="loading">Loading trends...</div>
+</div>
+
+<!-- Modal for Tweet Statistics -->
+<div id="statsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <div id="tweetStats" class="tweet-stats-container"></div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --twitter-color: #1da1f2;
+        --card-bg: #ffffff;
+        --text-color: #14171a;
+        --text-secondary: #657786;
+    }
+
+    .platform-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .platform-header h1 {
+        font-size: 2.5rem;
+        color: var(--twitter-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .platform-description {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+    }
+
+    .trend-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .trend-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+    }
+
+    .trend-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .trend-rank {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--twitter-color);
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+    }
+
+    .trend-title {
+        font-size: 1.2rem;
+        line-height: 1.4;
+        margin: 0;
+        color: var(--text-color);
+        padding-top: 2rem;
+    }
+
+    .trend-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin: 0;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .trend-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .trend-stat i {
+        color: var(--twitter-color);
+    }
+
+    .hashtags {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    .hashtag {
+        background: rgba(29, 161, 242, 0.1);
+        color: var(--twitter-color);
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .hashtag:hover {
+        background: rgba(29, 161, 242, 0.2);
+    }
+
+    .tweet-volume {
+        font-size: 1.1rem;
+        color: var(--twitter-color);
+        font-weight: 500;
+    }
+
+    .category-selector {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .category-btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .category-btn:hover {
+        background: var(--twitter-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .category-btn.active {
+        background: var(--twitter-color);
+        color: white;
+    }
+
+    .trend-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: auto;
+    }
+
+    .trend-btn {
+        flex: 1;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 20px;
+        background: rgba(29, 161, 242, 0.1);
+        color: var(--twitter-color);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .trend-btn:hover {
+        background: var(--twitter-color);
+        color: white;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .error {
+        text-align: center;
+        padding: 2rem;
+        color: #e0245e;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+        background-color: var(--card-bg);
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 12px;
+        width: 80%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .close {
+        color: var(--text-secondary);
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close:hover {
+        color: var(--text-color);
+    }
+
+    .tweet-stats-container {
+        margin-top: 1rem;
+    }
+
+    .tweet-card {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tweet-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .tweet-author {
+        font-weight: bold;
+        color: var(--twitter-color);
+    }
+
+    .tweet-content {
+        margin-bottom: 1rem;
+    }
+
+    .tweet-stats {
+        display: flex;
+        gap: 1rem;
+        color: var(--text-secondary);
+    }
+
+    .tweet-stat {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+
+<script>
+    const socket = io();
+    const modal = document.getElementById('statsModal');
+    const closeBtn = document.getElementsByClassName('close')[0];
+
+    let currentCategory = 'all';
+    let categories = {};
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    // Load categories
+    async function loadCategories() {
+        try {
+            const response = await fetch('/twitter/categories');
+            const data = await response.json();
+            if (data.status === 'success') {
+                categories = data.categories;
+                displayCategories();
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    function displayCategories() {
+        const container = document.getElementById('categorySelector');
+        container.innerHTML = '';
+
+        for (const [id, name] of Object.entries(categories)) {
+            const button = document.createElement('button');
+            button.className = `category-btn ${id === currentCategory ? 'active' : ''}`;
+            button.dataset.category = id;
+            button.innerHTML = `
+                <i class="fas fa-${getCategoryIcon(id)}"></i>
+                ${name}
+            `;
+            button.onclick = () => {
+                currentCategory = id;
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                button.classList.add('active');
+                fetchTrends();
+            };
+            container.appendChild(button);
+        }
+    }
+
+    function getCategoryIcon(category) {
+        const icons = {
+            'all': 'globe',
+            'entertainment': 'film',
+            'sports': 'running',
+            'politics': 'landmark',
+            'technology': 'microchip',
+            'business': 'chart-line'
+        };
+        return icons[category] || 'hashtag';
+    }
+
+    function displayTrends(trends) {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '';
+
+        if (!trends || trends.length === 0) {
+            container.innerHTML = '<div class="error">No trends found</div>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        trends.forEach(trend => {
+            const card = document.createElement('div');
+            card.className = 'trend-card';
+            
+            card.innerHTML = `
+                <div class="trend-header">
+                    <span class="trend-rank">#${trend.rank}</span>
+                    <span class="platform-tag">
+                        <i class="fab fa-twitter"></i>
+                    </span>
+                </div>
+                <h3 class="trend-title">${trend.title}</h3>
+                <div class="trend-meta">
+                    <span class="trend-stat">
+                        <i class="fas fa-chart-line"></i>
+                        ${trend.growth}
+                    </span>
+                    ${trend.tweet_volume ? `
+                        <span class="trend-stat">
+                            <i class="fas fa-comment-dots"></i>
+                            <span class="tweet-volume">${formatNumber(trend.tweet_volume)} tweets</span>
+                        </span>
+                    ` : ''}
+                </div>
+                <div class="trend-actions">
+                    <button onclick="showStats('${trend.title}')" class="trend-btn">
+                        <i class="fas fa-chart-bar"></i> View Stats
+                    </button>
+                    <a href="${trend.trend_url}" 
+                       target="_blank" 
+                       class="trend-btn">
+                        <i class="fab fa-twitter"></i> View Tweets
+                    </a>
+                </div>
+            `;
+
+            fragment.appendChild(card);
+        });
+
+        container.appendChild(fragment);
+    }
+
+    function showStats(trendTitle) {
+        const modalTitle = document.getElementById('modalTitle');
+        const tweetStats = document.getElementById('tweetStats');
+        
+        modalTitle.textContent = `Statistics for: ${trendTitle}`;
+        tweetStats.innerHTML = '<div class="loading">Loading statistics...</div>';
+        
+        modal.style.display = "block";
+        
+        fetch(`/twitter/trend/${encodeURIComponent(trendTitle)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayStats(data.data);
+                } else {
+                    tweetStats.innerHTML = `<div class="error">${data.message || 'Error loading statistics'}</div>`;
+                }
+            })
+            .catch(error => {
+                tweetStats.innerHTML = `<div class="error">Error loading statistics: ${error.message}</div>`;
+            });
+    }
+
+    function displayStats(data) {
+        const tweetStats = document.getElementById('tweetStats');
+        tweetStats.innerHTML = '';
+
+        if (!data.tweets || data.tweets.length === 0) {
+            tweetStats.innerHTML = '<div class="error">No tweets found</div>';
+            return;
+        }
+
+        data.tweets.forEach(tweet => {
+            const tweetCard = document.createElement('div');
+            tweetCard.className = 'tweet-card';
+            
+            tweetCard.innerHTML = `
+                <div class="tweet-header">
+                    <span class="tweet-author">${tweet.author}</span>
+                    <span class="tweet-time">${new Date(tweet.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="tweet-content">${tweet.text}</div>
+                <div class="tweet-stats">
+                    <span class="tweet-stat">
+                        <i class="fas fa-reply"></i>
+                        ${formatNumber(tweet.stats.replies)}
+                    </span>
+                    <span class="tweet-stat">
+                        <i class="fas fa-retweet"></i>
+                        ${formatNumber(tweet.stats.retweets)}
+                    </span>
+                    <span class="tweet-stat">
+                        <i class="fas fa-heart"></i>
+                        ${formatNumber(tweet.stats.likes)}
+                    </span>
+                    <span class="tweet-stat">
+                        <i class="fas fa-eye"></i>
+                        ${formatNumber(tweet.stats.views)}
+                    </span>
+                </div>
+            `;
+            
+            tweetStats.appendChild(tweetCard);
+        });
+    }
+
+    async function fetchTrends() {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '<div class="loading">Loading trends...</div>';
+
+        try {
+            const response = await fetch(`/twitter/trends?category=${currentCategory}`);
+            const trends = await response.json();
+            displayTrends(trends);
+        } catch (error) {
+            console.error('Error fetching trends:', error);
+            container.innerHTML = '<div class="error">Failed to load trends. Please try again later.</div>';
+        }
+    }
+
+    // Close modal when clicking the X
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Socket.io event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        loadCategories();
+        fetchTrends();
+    });
+
+    socket.on('trends_update', (data) => {
+        if (data.platform === 'twitter') {
+            displayTrends(data.trends);
+        }
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        loadCategories();
+        fetchTrends();
+    });
+</script>
+{% endblock %} 

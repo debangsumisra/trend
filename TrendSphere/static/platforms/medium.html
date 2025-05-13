@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Medium Trends - TrendSphere{% endblock %}
+
+{% block content %}
+<section class="platform-header">
+    <h1>Medium Trends</h1>
+    <p>Discover what's trending on Medium right now. Stay updated with the latest articles and stories.</p>
+</section>
+
+<div class="category-selector">
+    <button class="category-btn active" data-category="all">All Articles</button>
+    <button class="category-btn" data-category="technology">Technology</button>
+    <button class="category-btn" data-category="programming">Programming</button>
+    <button class="category-btn" data-category="startups">Startups</button>
+    <button class="category-btn" data-category="productivity">Productivity</button>
+</div>
+
+<div class="trend-container" id="trendContainer">
+    <div class="loading">Loading trends...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentCategory = 'all';
+    const socket = io();
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
+
+    function displayTrends(trends) {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '';
+
+        if (!trends || trends.length === 0) {
+            container.innerHTML = '<div class="error">No trends found</div>';
+            return;
+        }
+
+        trends.forEach(trend => {
+            const card = document.createElement('div');
+            card.className = 'trend-card';
+            
+            card.innerHTML = `
+                <div class="trend-header">
+                    <span class="trend-rank">#${trend.rank}</span>
+                    <span class="platform-tag">
+                        <i class="fab fa-medium"></i>
+                    </span>
+                </div>
+                <h3 class="trend-title">${trend.title}</h3>
+                <div class="trend-meta">
+                    <span class="trend-stat">
+                        <i class="fas fa-user"></i>
+                        ${trend.author}
+                    </span>
+                    <span class="trend-stat">
+                        <i class="fas fa-heart"></i>
+                        ${formatNumber(trend.claps || 0)} claps
+                    </span>
+                    <span class="trend-stat">
+                        <i class="fas fa-clock"></i>
+                        ${trend.reading_time} min read
+                    </span>
+                </div>
+                <div class="trend-actions">
+                    <a href="${trend.url}" 
+                       target="_blank" 
+                       class="trend-btn">
+                        <i class="fab fa-medium"></i> Read Article
+                    </a>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function fetchTrends(category) {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '<div class="loading">Loading trends...</div>';
+
+        fetch(`/medium/${category}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    container.innerHTML = `<div class="error">${data.error}</div>`;
+                } else {
+                    displayTrends(data.trends);
+                }
+            })
+            .catch(error => {
+                container.innerHTML = `<div class="error">Error loading trends: ${error.message}</div>`;
+            });
+    }
+
+    // Category button click handlers
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelector('.category-btn.active').classList.remove('active');
+            btn.classList.add('active');
+            currentCategory = btn.dataset.category;
+            fetchTrends(currentCategory);
+        });
+    });
+
+    // Socket.io event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        fetchTrends(currentCategory);
+    });
+
+    socket.on('trends_update', (data) => {
+        if (data.platform === 'medium') {
+            displayTrends(data.trends);
+        }
+    });
+
+    // Initial fetch
+    fetchTrends(currentCategory);
+</script>
+{% endblock %} 

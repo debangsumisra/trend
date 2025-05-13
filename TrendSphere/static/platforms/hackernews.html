@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker News Trends - TrendSphere</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/styles/particles.css" rel="stylesheet">
+    <style>
+        body { 
+            background: #0a0a1a; 
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar { 
+            background: rgba(13, 13, 38, 0.8);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .navbar-brand { 
+            font-weight: bold; 
+            font-size: 1.5rem;
+            background: linear-gradient(45deg, #ff3a88, #33ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .navbar-nav .nav-link { 
+            color: #fff !important; 
+            margin-right: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link.active, 
+        .navbar-nav .nav-link:hover { 
+            color: #33ccff !important;
+            transform: translateY(-2px);
+        }
+        
+        .container { 
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .platform-header {
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .platform-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff3a88, #33ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .platform-header p {
+            color: #aaa;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .trend-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .trend-card {
+            background: rgba(26, 26, 56, 0.6);
+            border-radius: 15px;
+            padding: 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .trend-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .trend-inner {
+            padding: 1.5rem;
+        }
+
+        .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .trend-rank {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff3a88, #33ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(51, 204, 255, 0.3);
+        }
+
+        .trend-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #fff;
+        }
+
+        .trend-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: auto;
+        }
+
+        .trend-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .trend-stat:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .trend-actions {
+            margin-top: 1rem;
+        }
+
+        .trend-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1.5rem;
+            background: #ff6600;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.95rem;
+        }
+
+        .trend-btn:hover {
+            background: #cc5200;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+
+        .error {
+            color: #ff3a88;
+            padding: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <nav>
+                <a href="/" class="logo">
+                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                    <div class="logo-text">
+                        <span>Trend</span><span>Sphere</span>
+                    </div>
+                </a>
+                
+                <div class="nav-links">
+                    <a href="/twitter" class="nav-link"><i class="fab fa-twitter"></i> Twitter</a>
+                    <a href="/youtube" class="nav-link"><i class="fab fa-youtube"></i> YouTube</a>
+                    <a href="/reddit" class="nav-link"><i class="fab fa-reddit"></i> Reddit</a>
+                    <a href="/hackernews" class="nav-link active"><i class="fab fa-hacker-news"></i> Hacker News</a>
+                    <a href="/googlenews" class="nav-link"><i class="fas fa-newspaper"></i> Google News</a>
+                    <a href="/producthunt" class="nav-link"><i class="fas fa-rocket"></i> Product Hunt</a>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <div class="trend-container" id="trendContainer">
+                <div class="loading">Loading trends...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="/static/js/particles.js"></script>
+    <script>
+        const socket = io();
+
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days}d ago`;
+            if (hours > 0) return `${hours}h ago`;
+            if (minutes > 0) return `${minutes}m ago`;
+            return 'Just now';
+        }
+
+        function displayTrends(trends) {
+            const container = document.getElementById('trendContainer');
+            container.innerHTML = '';
+
+            if (!trends || trends.length === 0) {
+                container.innerHTML = '<div class="error">No trends found</div>';
+                return;
+            }
+
+            trends.forEach(trend => {
+                const card = document.createElement('div');
+                card.className = 'trend-card';
+                
+                card.innerHTML = `
+                        <div class="trend-inner">
+                    <div class="trend-header">
+                        <span class="trend-rank">#${trend.rank}</span>
+                        <span class="platform-tag">
+                            <i class="fab fa-hacker-news"></i>
+                        </span>
+                    </div>
+                    <h3 class="trend-title">${trend.title}</h3>
+                    <div class="trend-meta">
+                        <span class="trend-stat">
+                            <i class="fas fa-arrow-up"></i>
+                                    ${formatNumber(trend.points)} points
+                        </span>
+                        <span class="trend-stat">
+                                    <i class="fas fa-comment"></i>
+                                    ${formatNumber(trend.comments)} comments
+                        </span>
+                        <span class="trend-stat">
+                                    <i class="fas fa-clock"></i>
+                                    ${formatDate(trend.time)}
+                        </span>
+                    </div>
+                    <div class="trend-actions">
+                                <a href="${trend.url}" target="_blank" class="trend-btn">
+                            <i class="fab fa-hacker-news"></i> View Story
+                        </a>
+                            </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function fetchTrends() {
+            const container = document.getElementById('trendContainer');
+            container.innerHTML = '<div class="loading">Loading trends...</div>';
+
+            fetch('/api/hackernews/trends')
+                .then(response => response.json())
+                    .then(trends => {
+                        displayTrends(trends);
+                })
+                .catch(error => {
+                    container.innerHTML = `<div class="error">Error loading trends: ${error.message}</div>`;
+                });
+        }
+
+        // Socket.io event handlers
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            fetchTrends();
+        });
+
+        socket.on('trends_update', (data) => {
+            if (data.platform === 'hackernews') {
+                displayTrends(data.trends);
+            }
+        });
+
+        // Initial fetch
+        fetchTrends();
+    </script>
+</body>
+</html> 

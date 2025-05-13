@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Reddit Trends - TrendSphere{% endblock %}
+
+{% block content %}
+<section class="platform-header">
+    <h1>Reddit Trends</h1>
+    <p>Discover what's trending on Reddit right now. Stay updated with the hottest discussions and communities.</p>
+</section>
+
+<div class="category-selector">
+    <button class="category-btn active" data-category="all">All Subreddits</button>
+    <button class="category-btn" data-category="technology">Technology</button>
+    <button class="category-btn" data-category="gaming">Gaming</button>
+    <button class="category-btn" data-category="news">News</button>
+    <button class="category-btn" data-category="science">Science</button>
+</div>
+
+<div class="trend-container" id="trendContainer">
+    <div class="loading">Loading trends...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const socket = io();
+
+    function formatNumber(num) {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+    }
+
+    function displayTrends(trends) {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '';
+
+        if (!trends || trends.length === 0) {
+            container.innerHTML = '<div class="error">No trends found</div>';
+            return;
+        }
+
+        trends.forEach(trend => {
+            const card = document.createElement('div');
+            card.className = 'trend-card';
+            
+            card.innerHTML = `
+                <div class="trend-header">
+                    <span class="trend-rank">#${trend.rank}</span>
+                    <span class="platform-tag">
+                        <i class="fab fa-reddit"></i>
+                    </span>
+                </div>
+                <h3 class="trend-title">${trend.title}</h3>
+                <div class="trend-meta">
+                    <span class="trend-stat">
+                        <i class="fas fa-arrow-up"></i>
+                        ${formatNumber(trend.upvotes || 0)} upvotes
+                    </span>
+                    <span class="trend-stat">
+                        <i class="fas fa-comments"></i>
+                        ${formatNumber(trend.comments || 0)} comments
+                    </span>
+                    <span class="trend-stat">
+                        <i class="fas fa-users"></i>
+                        r/${trend.subreddit}
+                    </span>
+                </div>
+                <div class="trend-actions">
+                    <a href="${trend.url}" 
+                       target="_blank" 
+                       class="trend-btn">
+                        <i class="fab fa-reddit"></i> View Post
+                    </a>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    function fetchTrends() {
+        const container = document.getElementById('trendContainer');
+        container.innerHTML = '<div class="loading">Loading trends...</div>';
+
+        fetch('/api/reddit/trends')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    container.innerHTML = `<div class="error">${data.message || 'Error loading trends'}</div>`;
+                } else {
+                    displayTrends(data.data);
+                }
+            })
+            .catch(error => {
+                container.innerHTML = `<div class="error">Error loading trends: ${error.message}</div>`;
+            });
+    }
+
+    // Remove category button logic
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.style.display = 'none';
+    });
+
+    // Socket.io event handlers
+    socket.on('connect', () => {
+        console.log('Connected to server');
+        fetchTrends();
+    });
+
+    socket.on('trends_update', (data) => {
+        if (data.platform === 'reddit') {
+            displayTrends(data.trends);
+        }
+    });
+
+    // Initial fetch
+    fetchTrends();
+</script>
+{% endblock %} 
